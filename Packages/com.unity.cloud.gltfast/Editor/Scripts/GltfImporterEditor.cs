@@ -169,6 +169,10 @@ namespace GLTFast
                 depRoot.style.display = DisplayStyle.None;
             }
 
+            var textureSettings = new PropertyField(
+                serializedObject.FindProperty("embeddedTextureSettings"), "Embedded textures (spike)");
+            root.Add(textureSettings);
+
             root.Bind(serializedObject);
 
             var settings = root.Query<VisualElement>(name: "AdvancedSettings").First();

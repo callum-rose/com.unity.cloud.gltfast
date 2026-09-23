@@ -34,9 +34,9 @@ namespace GLTFast.Editor
 {
 
 #if ENABLE_DEFAULT_GLB_IMPORTER
-    [ScriptedImporter(1, new[] { "gltf", "glb" })]
+    [ScriptedImporter(2, new[] { "gltf", "glb" })]
 #else
-    [ScriptedImporter(1, null, overrideExts: new[] { "gltf","glb" })]
+    [ScriptedImporter(2, null, overrideExts: new[] { "gltf","glb" })]
 #endif
     class GltfImporter : ScriptedImporter
     {
@@ -58,6 +58,9 @@ namespace GLTFast.Editor
         [SerializeField]
         internal LogItem[] reportItems;
         // ReSharper restore NotAccessedField.Local
+
+        [SerializeField]
+        private EmbeddedTextureSettings embeddedTextureSettings = new EmbeddedTextureSettings();
 
         GltfImport m_Gltf;
 
@@ -113,7 +116,18 @@ namespace GLTFast.Editor
                 instantiationSettings = new InstantiationSettings();
             }
 
-            var success = AsyncHelpers.RunSync(() => m_Gltf.Load(ctx.assetPath, importSettings));
+            // Keep the saved readability setting intact; processing needs a temporary CPU copy.
+            var textureSettings = embeddedTextureSettings ?? new EmbeddedTextureSettings();
+            var loadSettings = importSettings;
+            var textureTarget = BuildTarget.NoTarget;
+            if (textureSettings.Enabled)
+            {
+                textureTarget = ctx.selectedBuildTarget;
+                loadSettings = JsonUtility.FromJson<ImportSettings>(JsonUtility.ToJson(importSettings));
+                loadSettings.TexturesReadable = true;
+            }
+
+            var success = AsyncHelpers.RunSync(() => m_Gltf.Load(ctx.assetPath, loadSettings));
 
             CollectingLogger instantiationLogger = null;
             if (success)
@@ -161,6 +175,7 @@ namespace GLTFast.Editor
                     }
                 }
 
+                var processedTextures = new HashSet<Texture2D>();
                 for (var i = 0; i < m_Gltf.TextureCount; i++)
                 {
                     var texture = m_Gltf.GetTexture(i);
@@ -169,6 +184,11 @@ namespace GLTFast.Editor
                         var textureAssetPath = AssetDatabase.GetAssetPath(texture);
                         if (string.IsNullOrEmpty(textureAssetPath))
                         {
+                            if (textureSettings.Enabled && processedTextures.Add(texture))
+                            {
+                                EmbeddedTextureProcessor.Process(texture, textureSettings, textureTarget,
+                                    importSettings.TexturesReadable, ctx);
+                            }
                             AddObjectToAsset(ctx, $"textures/{texture.name}", texture);
                         }
                     }
