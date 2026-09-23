@@ -21,8 +21,8 @@ licenses, notices and all remaining package resources are unchanged.
 
 Keep the branch maintained by the fork owner; do not move consumers automatically.
 Compare a new upstream release, reapply these six files as a reviewed patch, preserve
-GUIDs and bump the importer version if artifact semantics change. Run Marble's
-`tools/glb-importer-spike/run.py` against the new full commit pin, including iOS →
+GUIDs and bump the importer version if artifact semantics change. Run this fork's
+`Tools/EmbeddedTextureValidation/run.py --dependency <Git-URL-with-full-SHA>` against the new published commit, including iOS →
 macOS → iOS invalidation and generated edge cases. Verify a cold Git/LFS fetch.
 Update Marble through Unity PackageManager Client and commit its generated manifest
 and lockfile together. Preserve upstream license and notices.
@@ -30,3 +30,5 @@ and lockfile together. Preserve upstream license and notices.
 The package is under `Packages/com.unity.cloud.gltfast`; use that Git URL path and
 a full commit SHA in UPM. Git LFS must be installed for upstream binary resources.
 Validation is editor-only; it does not establish player builds or device savings.
+
+Reusable harness instructions and the pinned fixture live in [Tools/EmbeddedTextureValidation](Tools/EmbeddedTextureValidation/README.md). Generated spike reports and previews are kept as run artifacts.
