@@ -8,6 +8,7 @@
         <Style src="GltfImporter-style.uss" />
         <uie:EnumField label="Animation" value="Legacy" binding-path="importSettings.animationMethod" type="GLTFast.AnimationMethod, glTFast" name="Animation" focusable="true" tooltip="Target animation system" />
         <ui:Toggle label="Generate Lightmap UVs" name="SecondaryUVSet" binding-path="editorImportSettings.generateSecondaryUVSet" text="&#x9;" tooltip="Generate lightmap texture coordinates into the second UV channel (if not present)" />
+        <ui:Toggle label="Read/Write" name="MeshesReadable" binding-path="editorImportSettings.meshesReadable" text="&#x9;" tooltip="Keep mesh data readable from scripts in players. Turn off to save memory when nothing reads the meshes at runtime." />
     </ui:VisualElement>
     <ui:VisualElement name="AdvancedSettings" class="section">
         <Style src="GltfImporter-style.uss" />

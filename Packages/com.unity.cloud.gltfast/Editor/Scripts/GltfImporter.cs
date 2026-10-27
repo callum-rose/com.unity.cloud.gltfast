@@ -230,6 +230,10 @@ namespace GLTFast.Editor
                         {
                             Unwrapping.GenerateSecondaryUVSet(mesh);
                         }
+                        if (!editorImportSettings.meshesReadable)
+                        {
+                            MarkNotReadable(mesh);
+                        }
                         AddObjectToAsset(ctx, $"meshes/{mesh.name}", mesh);
                     }
                 }
@@ -420,6 +424,15 @@ namespace GLTFast.Editor
                 return extName;
             }
             return originalName;
+        }
+
+        static void MarkNotReadable(Mesh mesh)
+        {
+            // Keeps the data in the import artifact but drops the player's CPU copy,
+            // as ModelImporter does with Read/Write off.
+            var serializedMesh = new SerializedObject(mesh);
+            serializedMesh.FindProperty("m_IsReadable").boolValue = false;
+            serializedMesh.ApplyModifiedPropertiesWithoutUndo();
         }
 
         static bool HasSecondaryUVs(Mesh mesh)

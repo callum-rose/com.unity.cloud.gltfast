@@ -20,5 +20,12 @@ namespace GLTFast.Editor
         /// </summary>
         [Tooltip("Generate Lightmap UVs")]
         public bool generateSecondaryUVSet;
+
+        /// <summary>
+        /// Keeps a CPU copy of mesh data in players, so scripts can read it.
+        /// When off, meshes are saved like a ModelImporter mesh with Read/Write off.
+        /// </summary>
+        [Tooltip("Keep mesh data readable from scripts in players")]
+        public bool meshesReadable = true;
     }
 }
