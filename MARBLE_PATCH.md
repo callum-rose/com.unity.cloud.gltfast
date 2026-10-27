@@ -32,3 +32,11 @@ a full commit SHA in UPM. Git LFS must be installed for upstream binary resource
 Validation is editor-only; it does not establish player builds or device savings.
 
 Reusable harness instructions and the pinned fixture live in [Tools/EmbeddedTextureValidation](Tools/EmbeddedTextureValidation/README.md). Generated spike reports and previews are kept as run artifacts.
+
+## Mesh readability option
+
+`EditorImportSettings.meshesReadable` (inspector: "Read/Write", default on) lets an
+asset ship its meshes without a CPU copy, like ModelImporter's Read/Write off. When off,
+`GltfImporter` sets each mesh's serialized `m_IsReadable` to 0 before adding it to the
+asset; the data stays in the artifact. The default keeps existing metas and artifacts
+unchanged, so the importer version is not bumped. Runtime loads are unaffected.
