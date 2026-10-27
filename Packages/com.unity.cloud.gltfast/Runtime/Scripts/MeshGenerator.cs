@@ -324,16 +324,29 @@ namespace GLTFast
             {
                 indexCount += m_Indices[i].Length;
             }
+            // Indices are relative to each sub-mesh's base vertex, so they fit 16 bits whenever the whole
+            // vertex buffer does. Capping at 65535 vertices keeps 0xFFFF free; some APIs read it as a strip restart.
+            var indexFormat = m_VertexData.VertexCount <= ushort.MaxValue ? IndexFormat.UInt16 : IndexFormat.UInt32;
             Profiler.BeginSample("SetIndexBufferParams");
-            msh.SetIndexBufferParams(indexCount, IndexFormat.UInt32); //TODO: UInt16 maybe?
+            msh.SetIndexBufferParams(indexCount, indexFormat);
             Profiler.EndSample();
+            var indices16 = indexFormat == IndexFormat.UInt16
+                ? ConvertIndicesToUInt16(indexCount)
+                : default;
             msh.subMeshCount = m_Indices.Length;
             indexCount = 0;
             Bounds bounds = default;
             for (var i = 0; i < m_Indices.Length; i++)
             {
                 Profiler.BeginSample("SetIndexBufferData");
-                msh.SetIndexBufferData(m_Indices[i], 0, indexCount, m_Indices[i].Length, defaultMeshUpdateFlags);
+                if (indices16.IsCreated)
+                {
+                    msh.SetIndexBufferData(indices16, indexCount, indexCount, m_Indices[i].Length, defaultMeshUpdateFlags);
+                }
+                else
+                {
+                    msh.SetIndexBufferData(m_Indices[i], 0, indexCount, m_Indices[i].Length, defaultMeshUpdateFlags);
+                }
                 Profiler.EndSample();
 
                 Profiler.BeginSample("SetSubMesh");
@@ -377,6 +390,11 @@ namespace GLTFast
 
             msh.bounds = bounds;
 
+            if (indices16.IsCreated)
+            {
+                indices16.Dispose();
+            }
+
             Profiler.EndSample();
 
             if (m_Topology == MeshTopology.Triangles || m_Topology == MeshTopology.Quads)
@@ -409,6 +427,28 @@ namespace GLTFast
             Profiler.EndSample();
 
             return msh;
+        }
+
+        NativeArray<ushort> ConvertIndicesToUInt16(int indexCount)
+        {
+            Profiler.BeginSample("ConvertIndicesToUInt16");
+            var result = new NativeArray<ushort>(indexCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            // Sub-arrays share the safety handle of the whole array, so the jobs run one after another.
+            JobHandle handle = default;
+            var offset = 0;
+            for (var i = 0; i < m_Indices.Length; i++)
+            {
+                var job = new ConvertIndicesInt32ToUInt16Job
+                {
+                    input = m_Indices[i].AsReadOnly(),
+                    result = result.GetSubArray(offset, m_Indices[i].Length)
+                };
+                handle = job.Schedule(m_Indices[i].Length, GltfImportBase.DefaultBatchCount, handle);
+                offset += m_Indices[i].Length;
+            }
+            handle.Complete();
+            Profiler.EndSample();
+            return result;
         }
 
         IEnumerable<(int index, MeshPrimitiveBase primitive)> IterateSubMeshesIndexed()

@@ -477,6 +477,21 @@ namespace GLTFast.Jobs
     }
 
     [BurstCompile]
+    struct ConvertIndicesInt32ToUInt16Job : IJobParallelFor
+    {
+        [ReadOnly]
+        public NativeArray<int>.ReadOnly input;
+
+        [WriteOnly]
+        public NativeArray<ushort> result;
+
+        public void Execute(int index)
+        {
+            result[index] = (ushort)input[index];
+        }
+    }
+
+    [BurstCompile]
     struct ConvertIndicesUInt32ToInt32Job : IJobParallelFor
     {
         [ReadOnly]
