@@ -34,9 +34,9 @@ namespace GLTFast.Editor
 {
 
 #if ENABLE_DEFAULT_GLB_IMPORTER
-    [ScriptedImporter(2, new[] { "gltf", "glb" })]
+    [ScriptedImporter(3, new[] { "gltf", "glb" })]
 #else
-    [ScriptedImporter(2, null, overrideExts: new[] { "gltf","glb" })]
+    [ScriptedImporter(3, null, overrideExts: new[] { "gltf","glb" })]
 #endif
     class GltfImporter : ScriptedImporter
     {
